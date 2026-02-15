@@ -9,7 +9,7 @@ As a developer, I want to submit an ISO datetime value and receive a datetime va
 Dependencies:
     - FastAPI
     - datetime
-    - http
+
 
 Example Expected API call format
     GET /time?iso_time=2026-02-11T16:00:00Z
