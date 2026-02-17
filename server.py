@@ -1,6 +1,5 @@
 """
 Filename: server.py
-Author: Chris Mosier
 Date Created: 2026-02-15
 
 Description:
