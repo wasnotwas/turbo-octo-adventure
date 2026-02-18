@@ -23,6 +23,7 @@ Instructions to Run FastAPI server
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
 import json
+import re
 
 app = FastAPI()
 
@@ -41,7 +42,17 @@ def parse_iso_time(iso_time):
         # https://fastapi.tiangolo.com/reference/exceptions/#fastapi.HTTPException Accessed 18 February 2026
         raise HTTPException(status_code=400, detail="Invalid ISO timestamp")
     return dt
-
+# https://ucarion.com/rfc3339-in-any-language Accessed 18 February 2026
+OFFSET_REGEX = re.compile(r"^([\+|-])(\d{2}):(\d{2})$")
+def parse_offset(offset):
+    match = OFFSET_REGEX.match(offset)
+    if not match:
+        raise HTTPException(status_code=400, detail="incorrect offset format")
+    # https://docs.python.org/3/library/re.html#re.Match.groups Accessed 18 February 2026
+    sign, hh, mm = match.groups()
+    hours = int(hh)
+    minutes = int(mm)
+    # TODO: Finish this function (I will finish this fn later (William)
 @app.get("/time")
 def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
 
@@ -53,8 +64,8 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
     # Validate that the parameter in the path is an ISO timestamp
     dt = parse_iso_time(iso_time)
 
-    # convert datetime string from URL to datetime object
-    iso_time = datetime.fromisoformat(iso_time)
+    if (iana is None and offset is None) or (iana is not None and offset is not None):
+        raise HTTPException(status_code=400, detail="use iana or offset but not both")
 
     # Validate that the parameter in the path for "display_format" exists and is either "long" or "short"
     if display_format == "long":
