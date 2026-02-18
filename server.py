@@ -20,7 +20,7 @@ Instructions to Run FastAPI server
 
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from datetime import datetime
 import json
 
@@ -29,6 +29,18 @@ app = FastAPI()
 @app.get("/")
 def root_message():
     return {"Server is running"}
+
+def parse_iso_time(iso_time):
+    # replace "Z" with "+00:00" because "Z" is not understood by datetime object, but +00:00 is valid UTC time
+    if iso_time.endswith("Z"):
+        iso_time = iso_time.replace('Z', '+00:00')
+    try:
+        # https://docs.python.org/3/library/datetime.html#datetime.datetime.fromisoformat Accessed 18 February 2026
+        dt = datetime.fromisoformat(iso_time)
+    except ValueError:
+        # https://fastapi.tiangolo.com/reference/exceptions/#fastapi.HTTPException Accessed 18 February 2026
+        raise HTTPException(status_code=400, detail="Invalid ISO timestamp")
+    return dt
 
 @app.get("/time")
 def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
@@ -39,10 +51,7 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
     # Validate the existence of a parameter in the path
 
     # Validate that the parameter in the path is an ISO timestamp
-
-    # replace "Z" with "+00:00" because "Z" is not understood by datetime object, but +00:00 is valid UTC time
-    if iso_time.endswith("Z"):
-        iso_time = iso_time.replace('Z', '+00:00')
+    dt = parse_iso_time(iso_time)
 
     # convert datetime string from URL to datetime object
     iso_time = datetime.fromisoformat(iso_time)
