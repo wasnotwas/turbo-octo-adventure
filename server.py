@@ -21,9 +21,10 @@ Instructions to Run FastAPI server
 """
 
 from fastapi import FastAPI, HTTPException
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import json
 import re
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 app = FastAPI()
 
@@ -45,14 +46,27 @@ def parse_iso_time(iso_time):
 # https://ucarion.com/rfc3339-in-any-language Accessed 18 February 2026
 OFFSET_REGEX = re.compile(r"^([\+|-])(\d{2}):(\d{2})$")
 def parse_offset(offset):
+    # Check for format of offset (+/-00:00)
     match = OFFSET_REGEX.match(offset)
     if not match:
         raise HTTPException(status_code=400, detail="incorrect offset format")
+    # Extract sign, mm, and hh from offset
     # https://docs.python.org/3/library/re.html#re.Match.groups Accessed 18 February 2026
     sign, hh, mm = match.groups()
     hours = int(hh)
     minutes = int(mm)
-    # TODO: Finish this function (I will finish this fn later (William)
+    # Calculate total minutes from offset
+    total_minutes = (hours * 60) + minutes
+    # Get a timedelta object
+    # https://docs.python.org/3/library/datetime.html#timedelta-objects Accessed 19 February 2026
+    delta_minutes = timedelta(minutes=total_minutes)
+    # Change to negative value if sign is negative
+    if sign == "-":
+        delta_minutes = -delta_minutes
+    # Get timezone object for timezone math later
+    # https://docs.python.org/3/library/datetime.html#timezone-objects Accessed 19 February 2026
+    return timezone(delta_minutes)
+
 @app.get("/time")
 def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
 
@@ -64,8 +78,24 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
     # Validate that the parameter in the path is an ISO timestamp
     dt = parse_iso_time(iso_time)
 
+    # Check either iana or offset is provided
     if (iana is None and offset is None) or (iana is not None and offset is not None):
         raise HTTPException(status_code=400, detail="use iana or offset but not both")
+    
+    # Apply appropriate conversion using astimezone method
+    # https://docs.python.org/3/library/datetime.html#datetime.datetime.astimezone Accessed 19 February 2026
+    if iana is not None:
+        try:
+            # https://docs.python.org/3/library/zoneinfo.html Accessed 19 February 2026
+            # NOTE: According to docs above Windows users may need to install tzdata
+            dt = dt.astimezone(ZoneInfo(iana))
+        except ZoneInfoNotFoundError:
+            HTTPException(status_code=400, detail="ZoneInfo error")
+        tz_used = iana
+    else:
+        dt = dt.astimezone(parse_offset(offset))
+        tz_used = offset
+
 
     # Validate that the parameter in the path for "display_format" exists and is either "long" or "short"
     if display_format == "long":
@@ -84,7 +114,7 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
     json_formated_output = {
         "formatted": iso_time,
         "iso_time": Original_iso_time,
-        "status": "200 OK"
+        "tz": tz_used
     } 
 
     # Convert into JSON format
