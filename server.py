@@ -67,13 +67,22 @@ def parse_offset(offset):
     # https://docs.python.org/3/library/datetime.html#timezone-objects Accessed 19 February 2026
     return timezone(delta_minutes)
 
+def format_datetime(dt, req_format):
+    # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior Accessed 19 February 2026
+    hour = dt.strftime("%I")
+    minute = dt.strftime("%M")
+    am_pm = dt.strftime("%p")
+
+    if req_format == "short":
+        return f"{dt.strftime('%b')} {dt.day}, {dt.strftime('%Y')}, {hour}:{minute} {am_pm}"
+    else:
+        return f"{dt.strftime('%A')}, {dt.strftime('%B')} {dt.day}, {dt.strftime('%Y')}, {hour}:{minute} {am_pm}"
+
 @app.get("/time")
 def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
 
     # keep original value of iso_time parameter
     Original_iso_time = iso_time
-
-    # Validate the existence of a parameter in the path
 
     # Validate that the parameter in the path is an ISO timestamp
     dt = parse_iso_time(iso_time)
@@ -96,32 +105,17 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
         dt = dt.astimezone(parse_offset(offset))
         tz_used = offset
 
-
-    # Validate that the parameter in the path for "display_format" exists and is either "long" or "short"
-    if display_format == "long":
-        # convert to string
-        iso_time = iso_time.strftime('%A, %B %d, %Y, %I:%M %p %Z')
-    elif display_format == "short":
-        # convert to string
-        iso_time = iso_time.strftime('%b %d, %Y at %I:%M %p %Z')
-    else:
-        # if no display format is provided, convert to "long" string
-        iso_time = iso_time.strftime('%A, %B %d, %Y, %I:%M %p %Z')
-
-    # check if there are optional parameters for "offset" and  "iana"
+    formatted = format_datetime(dt, display_format)
 
     # convert output to data object
     json_formated_output = {
-        "formatted": iso_time,
+        "formatted": formatted,
         "iso_time": Original_iso_time,
         "tz": tz_used
-    } 
-
-    # Convert into JSON format
-    json_data = json.dumps(json_formated_output)
+    }
 
     # return JSON formated object
-    return {json_data}
+    return json_formated_output
 
 # run this code as a standalone FastApi server from directly from Python
 if __name__ == '__main__':
