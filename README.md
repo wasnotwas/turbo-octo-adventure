@@ -16,6 +16,9 @@ GET /time?iso_time=2026-02-11T16:00:00Z&display_format=short
 #### Response Example in JSON
 ```JSON
 {
+   "formatted":"Feb 11, 2026, 04:00 PM",
+   "iso_time":"2026-02-11T16:00:00Z",
+   "tz":null
 }
 ```
 

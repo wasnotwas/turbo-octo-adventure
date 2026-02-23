@@ -88,11 +88,13 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
     dt = parse_iso_time(iso_time)
 
     # Check either iana or offset is provided
-    if (iana is None and offset is None) or (iana is not None and offset is not None):
+    # Chris updated to IF to allow for if display_format is provided, but not a value for iana or offset
+    if iana is not None and offset is not None:
         raise HTTPException(status_code=400, detail="use iana or offset but not both")
     
     # Apply appropriate conversion using astimezone method
     # https://docs.python.org/3/library/datetime.html#datetime.datetime.astimezone Accessed 19 February 2026
+    tz_used = None
     if iana is not None:
         try:
             # https://docs.python.org/3/library/zoneinfo.html Accessed 19 February 2026
@@ -101,7 +103,7 @@ def convert_datetime(iso_time, display_format=None, iana=None, offset=None):
         except ZoneInfoNotFoundError:
             HTTPException(status_code=400, detail="ZoneInfo error")
         tz_used = iana
-    else:
+    elif offset is not None:
         dt = dt.astimezone(parse_offset(offset))
         tz_used = offset
 
