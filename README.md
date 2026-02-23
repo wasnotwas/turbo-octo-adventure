@@ -7,10 +7,22 @@ This microservice will reformat a datetime value based on the end user's specifi
 3. Given the ISO timestamp and timezone offset (eg. -08:00), the time will be returned in the desired offset. 
 
 ## API Specification
+### Convert DateTime given a display format of "short" or "long"
+#### Request Example
+```
+GET /time?iso_time=2026-02-11T16:00:00Z&display_format=short
+```
+
+#### Response Example in JSON
+```JSON
+{
+}
+```
+
 ### Convert DateTime given a provided IANA name
 #### Request Example
 ```
-http GET http/time?iso_time=2026-02-11T16:00:00Z&iana=America/Los_Angeles&display_format=short
+GET /time?iso_time=2026-02-11T16:00:00Z&iana=America/Los_Angeles&display_format=short
 ```
 
 #### Response Example in JSON
@@ -18,13 +30,29 @@ http GET http/time?iso_time=2026-02-11T16:00:00Z&iana=America/Los_Angeles&displa
 {
     "formatted":"Feb 11, 2026, 08:00 AM",
     "iso_time":"2026-02-11T16:00:00Z",
-    "tz":"America/Los_Angeles"}
+    "tz":"America/Los_Angeles"
+}
+```
+### Convert DateTime given a provided offset value
+#### Request Example
+```
+GET /time?iso_time=2026-02-11T16:00:00Z&offset=-08:00&display_format=long
 ```
 
-### Response Format
-
-## API Specification
-
+#### Response Example in JSON
+```JSON
+{
+    "formatted":"Wednesday, February 11, 2026, 08:00 AM",
+    "iso_time":"2026-02-11T16:00:00Z",
+    "tz":"-08:00"
+}
+```
 
 ## UML Sequence Diagram
 ![Alt text](datetime_fomatter_UML.png)
+
+## Contributing
+Jordan Smith
+Chris Mosier - user story 1 & readme
+William William Orona - user story 2 & 3
+
