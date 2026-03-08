@@ -63,7 +63,6 @@ def parse_offset(offset):
     # Change to negative value if sign is negative
     if sign == "-":
         delta_minutes = -delta_minutes
-    # Get timezone object for timezone math later
     # https://docs.python.org/3/library/datetime.html#timezone-objects Accessed 19 February 2026
     return timezone(delta_minutes)
 
